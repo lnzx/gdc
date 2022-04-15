@@ -173,6 +173,24 @@ func Copy(filepath string, driveId string) error {
 	return nil
 }
 
+func CopyRemote(fileId string, driveId string) {
+	src, err := service.Files.Get(fileId).Fields("name").SupportsAllDrives(true).Do()
+	if err != nil {
+		fmt.Println("CopyRemote get error", err)
+		return
+	}
+	_, err = service.Files.Copy(fileId, &drive.File{
+		Name:    src.Name,
+		Parents: []string{driveId},
+	}).Fields().SupportsAllDrives(true).Do()
+	if err != nil {
+		fmt.Println("CopyRemote error", err)
+		return
+	} else {
+		fmt.Println("CopyRemote [OK]", src.Name)
+	}
+}
+
 func Move(filepath string, driveId string) error {
 	err := Copy(filepath, driveId)
 	if err == nil {

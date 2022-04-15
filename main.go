@@ -137,7 +137,19 @@ func main() {
 					if c.NArg() != 2 {
 						return fmt.Errorf("parameter error: file,driveId")
 					}
-					return drive.Copy(c.Args().Get(0), c.Args().Get(1))
+					if c.IsSet("remote") {
+						drive.CopyRemote(c.Args().Get(0), c.Args().Get(1))
+					} else {
+						return drive.Copy(c.Args().Get(0), c.Args().Get(1))
+					}
+					return nil
+				},
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:    "remote",
+						Aliases: []string{"r"},
+						Usage:   "Copy GD remote files",
+					},
 				},
 			},
 			{
