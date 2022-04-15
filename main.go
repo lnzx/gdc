@@ -31,6 +31,7 @@ func main() {
 			&cli.StringFlag{
 				Name:    "subject",
 				Aliases: []string{"s"},
+				Usage:   "user email to impersonate",
 			},
 		},
 		Commands: []*cli.Command{
@@ -41,7 +42,9 @@ func main() {
 					if c.NArg() < 1 {
 						return fmt.Errorf("enter a drive name")
 					}
-					drive.CreateDrive(c.Args().Slice(), c.Int("count"))
+					group := c.String("group")
+					user := c.String("user")
+					drive.CreateDrive(c.Args().Slice(), c.Int("count"), group, user)
 					return nil
 				},
 				Flags: []cli.Flag{
@@ -49,6 +52,16 @@ func main() {
 						Name:    "count",
 						Aliases: []string{"c"},
 						Value:   1,
+					},
+					&cli.StringFlag{
+						Name:    "group",
+						Aliases: []string{"g"},
+						Usage:   "Share driver group",
+					},
+					&cli.StringFlag{
+						Name:    "user",
+						Aliases: []string{"u"},
+						Usage:   "Share driver user",
 					},
 				},
 			},

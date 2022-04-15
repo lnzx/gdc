@@ -24,25 +24,51 @@ func InitService(ts oauth2.TokenSource) {
 	}
 }
 
-func CreateDrive(names []string, count int) {
+func CreateDrive(names []string, count int, group string, user string) {
 	for i, name := range names {
 		if count > 1 {
 			for j := 1; j <= count; j++ {
-				doCreateDrive(i, fmt.Sprintf("%s-%d", names[0], j))
+				doCreateDrive(i, fmt.Sprintf("%s-%d", names[0], j), group, user)
 			}
 		} else {
-			doCreateDrive(i, name)
+			doCreateDrive(i, name, group, user)
 		}
 	}
 }
 
-func doCreateDrive(index int, name string) {
+func doCreateDrive(index int, name, group, user string) {
 	if d, err := service.Drives.Create(name, &drive.Drive{
 		Name: name,
 	}).Fields("id").Do(); err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Printf("%d Create drive id: %s name: %s [OK]\n", index, d.Id, name)
+		addDriveGroup(d.Id, group)
+		addDriveUser(d.Id, user)
+	}
+}
+
+func addDriveGroup(driveId, group string) {
+	if group != "" {
+		if _, err := service.Permissions.Create(driveId, &drive.Permission{
+			EmailAddress: group,
+			Role:         "organizer", // owner organizer fileOrganizer writer commenter reader
+			Type:         "group",     // user group domain anyone
+		}).Fields().SupportsAllDrives(true).Do(); err != nil {
+			fmt.Println("add drive group error", err)
+		}
+	}
+}
+
+func addDriveUser(driveId, user string) {
+	if user != "" {
+		if _, err := service.Permissions.Create(driveId, &drive.Permission{
+			EmailAddress: user,
+			Role:         "organizer", // owner organizer fileOrganizer writer commenter reader
+			Type:         "user",      // user group domain anyone
+		}).Fields().SupportsAllDrives(true).Do(); err != nil {
+			fmt.Println("add drive user error", err)
+		}
 	}
 }
 
