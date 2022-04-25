@@ -13,6 +13,10 @@ import (
 	"time"
 )
 
+const (
+	uploadChunkSize = 64 * 1024 * 1024
+)
+
 var service *drive.Service
 
 func InitService(ts oauth2.TokenSource) {
@@ -100,7 +104,7 @@ func listFiles(driveId string) {
 		Spaces("drive").
 		Q("trashed=false").
 		PageSize(1000). //Default: 100
-		Fields("files/id", "files/name", "files/mimeType", "files/size", "nextPageToken").
+		Fields("nextPageToken,files(id,name,mimeType,size)").
 		DriveId(driveId).Do(); err != nil {
 		fmt.Println(err)
 	} else {
@@ -163,7 +167,7 @@ func Copy(filepath string, driveId string) error {
 		//FullFileExtension: "",
 		Parents: []string{driveId},
 	}
-	reader := bufio.NewReaderSize(media, googleapi.DefaultUploadChunkSize)
+	reader := bufio.NewReaderSize(media, uploadChunkSize)
 	file, err := service.Files.Create(meta).SupportsAllDrives(true).Fields("id").Media(reader).Do()
 	if err != nil {
 		fmt.Println("Upload file err", err)
