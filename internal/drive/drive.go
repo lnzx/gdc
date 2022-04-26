@@ -127,6 +127,7 @@ func DeleteDrive(driveIds []string, force bool) {
 }
 
 func Cat(fileId string, ranges string, count int, quiet bool, randx int64) {
+	rand.Seed(time.Now().UnixNano())
 	begin := time.Now()
 	for i := 0; i < count; i++ {
 		if randx > 0 {
