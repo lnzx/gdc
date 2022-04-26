@@ -17,7 +17,6 @@ func main() {
 		Before: func(c *cli.Context) error {
 			sa := c.String("sa")
 			subject := c.String("subject")
-			//fmt.Printf("Before running...sa: %s subject: %s\n", sa, subject)
 			ts := oauth.InitTokenSource(sa, subject)
 			drive.InitService(ts)
 			admin.InitService(ts)
@@ -105,7 +104,8 @@ func main() {
 					ranges := c.String("range")
 					quiet := c.Bool("quiet")
 					count := c.Int("count")
-					drive.Cat(c.Args().Get(0), ranges, count, quiet)
+					randx := c.Int64("rand")
+					drive.Cat(c.Args().Get(0), ranges, count, quiet, randx)
 					return nil
 				},
 				Flags: []cli.Flag{
@@ -127,6 +127,10 @@ func main() {
 						Aliases: []string{"c"},
 						Usage:   "requests count",
 						Value:   1,
+					},
+					&cli.IntFlag{
+						Name:  "rand",
+						Usage: "Randomly read specified bytes,cannot be larger than 128kib",
 					},
 				},
 			},

@@ -9,6 +9,7 @@ import (
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	"log"
+	"math/rand"
 	"os"
 	"time"
 )
@@ -125,8 +126,12 @@ func DeleteDrive(driveIds []string, force bool) {
 	}
 }
 
-func Cat(fileId string, ranges string, count int, quiet bool) {
+func Cat(fileId string, ranges string, count int, quiet bool, randx int64) {
 	for i := 0; i < count; i++ {
+		if ranges == "" && randx > 0 {
+			start := rand.Int63n(108447793152)
+			ranges = fmt.Sprintf("%v-%v", start, start+randx)
+		}
 		doCat(fileId, ranges, quiet)
 	}
 }
