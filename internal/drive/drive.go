@@ -127,6 +127,7 @@ func DeleteDrive(driveIds []string, force bool) {
 }
 
 func Cat(fileId string, ranges string, count int, quiet bool, randx int64) {
+	begin := time.Now()
 	for i := 0; i < count; i++ {
 		if randx > 0 {
 			start := rand.Int63n(108447793152)
@@ -134,6 +135,7 @@ func Cat(fileId string, ranges string, count int, quiet bool, randx int64) {
 		}
 		doCat(fileId, ranges, quiet)
 	}
+	fmt.Println("total cost: ", time.Since(begin))
 }
 
 func doCat(fileId string, ranges string, quiet bool) {
