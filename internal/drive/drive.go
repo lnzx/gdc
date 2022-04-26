@@ -130,6 +130,7 @@ func Cat(fileId string, ranges string, count int, quiet bool, randx int64) {
 	for i := 0; i < count; i++ {
 		if ranges == "" && randx > 0 {
 			rand.Seed(time.Now().UnixNano())
+			time.Sleep(time.Second)
 			start := rand.Int63n(108447793152)
 			ranges = fmt.Sprintf("%v-%v", start, start+randx)
 		}
