@@ -129,6 +129,7 @@ func DeleteDrive(driveIds []string, force bool) {
 func Cat(fileId string, ranges string, count int, quiet bool, randx int64) {
 	for i := 0; i < count; i++ {
 		if ranges == "" && randx > 0 {
+			rand.Seed(int64(i))
 			start := rand.Int63n(108447793152)
 			ranges = fmt.Sprintf("%v-%v", start, start+randx)
 		}
