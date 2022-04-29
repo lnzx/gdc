@@ -177,7 +177,37 @@ func main() {
 			{
 				Name:  "sync",
 				Usage: "Synchronize content of two drives/directories",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "dir",
+						Aliases:  []string{"d"},
+						Value:    "/mnt/tmp",
+						Usage:    "monitoring directory",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:    "suffix",
+						Aliases: []string{"s"},
+						Value:   ".plot",
+						Usage:   "monitoring file suffix",
+					},
+					&cli.StringFlag{
+						Name:    "replace",
+						Aliases: []string{"r"},
+						Value:   ".gz",
+						Usage:   "replaced new suffix",
+					},
+				},
 				Action: func(c *cli.Context) error {
+					if c.NArg() != 1 {
+						fmt.Println("Please input driveId")
+						os.Exit(1)
+					}
+					dir := c.String("dir")
+					suffix := c.String("suffix")
+					replace := c.String("replace")
+					driveId := c.Args().First()
+					drive.Sync(dir, suffix, replace, driveId)
 					return nil
 				},
 			},

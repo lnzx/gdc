@@ -3,6 +3,9 @@ module github.com/lnzx/gdc
 go 1.18
 
 require (
+	github.com/fsnotify/fsnotify v1.5.4
+	github.com/go-ini/ini v1.66.4
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/urfave/cli/v2 v2.4.0
 	golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a
 	google.golang.org/api v0.74.0
@@ -17,7 +20,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/net v0.0.0-20220407224826-aac1ed45d8e3 // indirect
-	golang.org/x/sys v0.0.0-20220408201424-a24fb2fb8a0f // indirect
+	golang.org/x/sys v0.0.0-20220429121018-84afa8d3f7b3 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220407144326-9054f6ed7bac // indirect

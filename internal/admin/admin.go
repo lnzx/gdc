@@ -61,7 +61,7 @@ func AddMember(group string, user string, filepath string) {
 		if user == "" {
 			continue
 		}
-		doAddMember(group, scanner.Text())
+		doAddMember(group, user)
 	}
 }
 
