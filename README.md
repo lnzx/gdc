@@ -1,4 +1,4 @@
-# gdc (google drive cli)
+# gdc
 
 ## 服务帐号全网域授权
 
