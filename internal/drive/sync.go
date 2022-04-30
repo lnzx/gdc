@@ -71,8 +71,8 @@ func Sync(dir, suffix, replace, driveId string) {
 				switch e.Op {
 				case fsnotify.Create:
 					name := e.Name
-					log.Println("-->Create file: ", name)
 					if strings.HasSuffix(name, suffix) {
+						log.Println("-->Create file: ", name)
 						final := strings.Replace(name, suffix, replace, 1)
 						if os.Rename(name, final) != nil {
 							log.Printf("Error: Rename %v -> %v\n", name, final)
