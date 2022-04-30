@@ -8,6 +8,7 @@ import (
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
@@ -152,6 +153,13 @@ func doCat(fileId string, ranges string, quiet bool) {
 		if !quiet {
 			reader := bufio.NewReaderSize(res.Body, googleapi.MinUploadChunkSize)
 			reader.WriteTo(os.Stdout)
+		} else {
+			reader := bufio.NewReaderSize(res.Body, googleapi.MinUploadChunkSize)
+			b, err := ioutil.ReadAll(reader)
+			if err != nil {
+				log.Panicln(err)
+			}
+			_ = b
 		}
 	}
 	fmt.Printf("\nCat file: %s range: %s time:%s \n", fileId, ranges, time.Since(start))
