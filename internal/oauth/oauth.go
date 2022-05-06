@@ -15,7 +15,8 @@ import (
 func InitTokenSource(sa string, subject string) oauth2.TokenSource {
 	key, err := ioutil.ReadFile(sa)
 	if err != nil {
-		log.Fatalln("sa file not found", err)
+		log.Println("sa file not found", err)
+		return nil
 	}
 	creds, err := google.CredentialsFromJSONWithParams(context.Background(), key, google.CredentialsParams{
 		Scopes:  []string{drive.DriveScope, admin.AdminDirectoryGroupScope},

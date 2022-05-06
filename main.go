@@ -18,8 +18,10 @@ func main() {
 			sa := c.String("sa")
 			subject := c.String("subject")
 			ts := oauth.InitTokenSource(sa, subject)
-			drive.InitService(ts)
-			admin.InitService(ts)
+			if ts != nil {
+				drive.InitService(ts)
+				admin.InitService(ts)
+			}
 			return nil
 		},
 		Flags: []cli.Flag{
