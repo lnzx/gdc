@@ -3,9 +3,7 @@ module github.com/lnzx/gdc
 go 1.18
 
 require (
-	github.com/fsnotify/fsnotify v1.5.4
-	github.com/go-ini/ini v1.66.4
-	github.com/mitchellh/go-homedir v1.1.0
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/urfave/cli/v2 v2.4.0
 	golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a
 	google.golang.org/api v0.74.0

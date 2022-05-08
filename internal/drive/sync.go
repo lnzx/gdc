@@ -3,7 +3,6 @@ package drive
 import (
 	"bufio"
 	"context"
-	"github.com/fsnotify/fsnotify"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
 	"io/ioutil"
@@ -11,13 +10,20 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 var sas []*string
 var n int
 var mu sync.RWMutex
 
-func config() {
+const (
+	PREFIX = "plot-k32-"
+	PLOT   = ".plot"
+	GZ     = ".gz"
+)
+
+func init() {
 	dir := "sa"
 	f, err := os.Stat(dir)
 	if err != nil {
@@ -53,61 +59,56 @@ func next() *string {
 	return sa
 }
 
-func Sync(dir, suffix, replace, driveId string) {
-	config()
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer watcher.Close()
-	done := make(chan bool)
-	go func() {
-		for {
-			select {
-			case e, ok := <-watcher.Events:
-				if !ok {
-					return
-				}
-				switch e.Op {
-				case fsnotify.Create:
-					name := e.Name
-					if strings.HasSuffix(name, suffix) {
-						log.Println("-->Create file: ", name)
-						final := strings.Replace(name, suffix, replace, 1)
-						if os.Rename(name, final) != nil {
-							log.Printf("Error: Rename %v -> %v\n", name, final)
-							return
-						}
-						log.Printf("Rename %v -> %v [OK]\n", name, final)
-					} else if strings.HasSuffix(name, replace) {
-						if upload(name, driveId) == nil {
-							log.Printf("<--Delete: %v\n", os.Remove(name))
-						}
-					}
-				}
-			case err, ok := <-watcher.Errors:
-				if !ok {
-					return
-				}
-				log.Println("error:", err)
-			}
+func Sync(dir, driveId string, t time.Duration) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("Error:", err)
+			err = nil
 		}
 	}()
-	err = watcher.Add(dir)
-	if err != nil {
-		log.Fatal(err)
+
+	log.Println("Sync dir:", dir, "time:", t)
+	ticker := time.NewTicker(t)
+	for {
+		<-ticker.C
+		readDir(dir, driveId)
 	}
-	<-done
 }
 
-func upload(filepath string, driveId string) (err error) {
+func readDir(dir, driveId string) {
+	fs, err := ioutil.ReadDir(dir)
+	if err != nil {
+		log.Println("read dir error:", err)
+		return
+	}
+	log.Println("->read dir")
+	for _, f := range fs {
+		if f.IsDir() {
+			continue
+		}
+		filename := f.Name()
+		if strings.HasSuffix(filename, PLOT) {
+			newname := strings.Replace(filename, PREFIX, "", 1)
+			newname = strings.Replace(newname, PLOT, GZ, 1)
+			if err = os.Rename(dir+"/"+filename, dir+"/"+newname); err != nil {
+				log.Println("Rename error:", err)
+				continue
+			}
+			log.Println("Rename:", filename, "->", newname)
+			go uploadTask(dir+"/"+newname, driveId)
+		} else if strings.HasSuffix(filename, GZ) {
+			go uploadTask(dir+"/"+filename, driveId)
+		}
+	}
+}
+
+func uploadTask(filepath string, driveId string) {
 	log.Println("Upload:", filepath)
 	media, err := os.Open(filepath)
 	if err != nil {
 		log.Println("Open file err", err)
 		return
 	}
-	defer media.Close()
 	stat, err := media.Stat()
 	if err != nil {
 		log.Println("File stat err", err)
@@ -130,6 +131,10 @@ func upload(filepath string, driveId string) (err error) {
 		log.Println("Upload err", err)
 		return
 	}
+	media.Close()
 	log.Printf("<--Upload [OK]: %s\n", meta.Name)
-	return nil
+
+	if err = os.Remove(filepath); err != nil {
+		log.Printf("<--Remove [ERROR]: %s\n", media.Name())
+	}
 }

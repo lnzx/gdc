@@ -7,6 +7,7 @@ import (
 	"github.com/lnzx/gdc/internal/oauth"
 	"github.com/urfave/cli/v2"
 	"os"
+	"time"
 )
 
 func main() {
@@ -187,17 +188,11 @@ func main() {
 						Usage:    "monitoring directory",
 						Required: true,
 					},
-					&cli.StringFlag{
-						Name:    "suffix",
-						Aliases: []string{"s"},
-						Value:   ".plot",
-						Usage:   "monitoring file suffix",
-					},
-					&cli.StringFlag{
-						Name:    "replace",
-						Aliases: []string{"r"},
-						Value:   ".gz",
-						Usage:   "replaced new suffix",
+					&cli.DurationFlag{
+						Name:    "time",
+						Aliases: []string{"t"},
+						Usage:   "task time",
+						Value:   time.Minute,
 					},
 				},
 				Action: func(c *cli.Context) error {
@@ -206,10 +201,9 @@ func main() {
 						os.Exit(1)
 					}
 					dir := c.String("dir")
-					suffix := c.String("suffix")
-					replace := c.String("replace")
 					driveId := c.Args().First()
-					drive.Sync(dir, suffix, replace, driveId)
+					t := c.Duration("time")
+					drive.Sync(dir, driveId, t)
 					return nil
 				},
 			},
