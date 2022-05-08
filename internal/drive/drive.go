@@ -49,12 +49,12 @@ func doCreateDrive(index int, name, group, user string) {
 		fmt.Println(err)
 	} else {
 		fmt.Printf("%d Create drive id: %s name: %s [OK]\n", index, d.Id, name)
-		addDriveGroup(d.Id, group)
-		addDriveUser(d.Id, user)
+		AddDriveGroup(d.Id, group)
+		AddDriveUser(d.Id, user)
 	}
 }
 
-func addDriveGroup(driveId, group string) {
+func AddDriveGroup(driveId, group string) {
 	if group != "" {
 		if _, err := service.Permissions.Create(driveId, &drive.Permission{
 			EmailAddress: group,
@@ -62,11 +62,13 @@ func addDriveGroup(driveId, group string) {
 			Type:         "group",     // user group domain anyone
 		}).Fields().SupportsAllDrives(true).Do(); err != nil {
 			fmt.Println("add drive group error", err)
+		} else {
+			fmt.Println("add drive group [OK]", group)
 		}
 	}
 }
 
-func addDriveUser(driveId, user string) {
+func AddDriveUser(driveId, user string) {
 	if user != "" {
 		if _, err := service.Permissions.Create(driveId, &drive.Permission{
 			EmailAddress: user,
@@ -74,6 +76,8 @@ func addDriveUser(driveId, user string) {
 			Type:         "user",      // user group domain anyone
 		}).Fields().SupportsAllDrives(true).Do(); err != nil {
 			fmt.Println("add drive user error", err)
+		} else {
+			fmt.Println("add drive user [OK]", user)
 		}
 	}
 }

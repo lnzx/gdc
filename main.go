@@ -218,12 +218,12 @@ func main() {
 							&cli.StringFlag{
 								Name:    "file",
 								Aliases: []string{"f"},
-								Usage:   "User emails file",
+								Usage:   "user emails file",
 							},
 							&cli.StringFlag{
 								Name:    "user",
 								Aliases: []string{"u"},
-								Usage:   "User email",
+								Usage:   "user email",
 							},
 						},
 						Action: func(c *cli.Context) error {
@@ -237,6 +237,62 @@ func main() {
 							}
 							group := c.Args().Get(0)
 							admin.AddMember(group, user, filepath)
+							return nil
+						},
+					},
+				},
+			},
+			{
+				Name:  "drive",
+				Usage: "drive manager",
+				Subcommands: []*cli.Command{
+					{
+						Name:  "addgroup",
+						Usage: "Share to a group",
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:    "group",
+								Aliases: []string{"g"},
+								Usage:   "group email address",
+							},
+						},
+						Action: func(c *cli.Context) error {
+							group := c.String("group")
+							if group == "" {
+								fmt.Println("please input a group email address")
+								return nil
+							}
+							driveId := c.Args().First()
+							if driveId == "" {
+								fmt.Println("please input a drive id arg")
+								return nil
+							}
+							drive.AddDriveGroup(driveId, group)
+							return nil
+						},
+					},
+					{
+						Name:  "adduser",
+						Usage: "Share to a user",
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:    "user",
+								Aliases: []string{"u"},
+								Usage:   "user email address",
+							},
+						},
+						Action: func(c *cli.Context) error {
+							user := c.String("user")
+							if user == "" {
+								fmt.Println("please input a user email address")
+								return nil
+							}
+							driveId := c.Args().First()
+							if driveId == "" {
+								fmt.Println("please input a drive id arg")
+								return nil
+							}
+							drive.AddDriveUser(driveId, user)
 							return nil
 						},
 					},
