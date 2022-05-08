@@ -23,6 +23,8 @@ const (
 	GZ     = ".gz"
 )
 
+var uploads = make(map[string]int)
+
 func init() {
 	dir := "sa"
 	f, err := os.Stat(dir)
@@ -68,6 +70,8 @@ func Sync(dir, driveId string, t time.Duration) {
 	}()
 
 	log.Println("Sync dir:", dir, "time:", t)
+	readDir(dir, driveId)
+
 	ticker := time.NewTicker(t)
 	for {
 		<-ticker.C
@@ -103,6 +107,11 @@ func readDir(dir, driveId string) {
 }
 
 func uploadTask(filepath string, driveId string) {
+	if _, ok := uploads[filepath]; ok {
+		return
+	} else {
+		uploads[filepath] = 1
+	}
 	log.Println("Upload:", filepath)
 	media, err := os.Open(filepath)
 	if err != nil {
