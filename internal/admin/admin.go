@@ -18,7 +18,7 @@ func InitService(ts oauth2.TokenSource) {
 	var err error
 	service, err = admin.NewService(context.Background(), option.WithTokenSource(ts))
 	if err != nil {
-		fmt.Println("create admin service error", err)
+		fmt.Println("Unable to create admin service", err)
 		os.Exit(1)
 	}
 }
@@ -44,9 +44,9 @@ func CreateGroup(email string) {
 	}
 }
 
-func AddMember(group string, user string, filepath string) {
+func AddGroupMember(group string, user string, filepath string) {
 	if user != "" {
-		doAddMember(group, user)
+		doAddGroupMember(group, user)
 		return
 	}
 	file, err := os.Open(filepath)
@@ -61,11 +61,11 @@ func AddMember(group string, user string, filepath string) {
 		if user == "" {
 			continue
 		}
-		doAddMember(group, user)
+		doAddGroupMember(group, user)
 	}
 }
 
-func doAddMember(group string, user string) error {
+func doAddGroupMember(group string, user string) error {
 	_, err := service.Members.Insert(group, &admin.Member{Email: user}).Fields().Do()
 	if err != nil {
 		fmt.Println(err)

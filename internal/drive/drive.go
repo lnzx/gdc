@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	uploadChunkSize = 64 * 1024 * 1024
+	kib64           = 64 * 1024
+	uploadChunkSize = kib64 * 1024
 )
 
 var service *drive.Service
@@ -25,7 +26,7 @@ func InitService(ts oauth2.TokenSource) {
 	var err error
 	service, err = drive.NewService(context.Background(), option.WithTokenSource(ts))
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Unable to create drive service", err)
 		os.Exit(1)
 	}
 }

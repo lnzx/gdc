@@ -2,6 +2,7 @@ package drive
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
@@ -18,14 +19,25 @@ var n int
 var mu sync.RWMutex
 
 const (
-	PREFIX = "plot-k32-"
-	PLOT   = ".plot"
-	GZ     = ".gz"
+	PLOT = ".plot"
+	GZ   = ".gz"
 )
 
 var uploads = make(map[string]int)
 
-func init() {
+var headSvc *drive.Service
+
+func initHead() {
+	var err error
+	headSvc, err = drive.NewService(context.Background(), option.WithCredentialsFile("head.json"))
+	if err != nil {
+		log.Fatalln("Error: new head service", err)
+	}
+}
+
+func initSync() {
+	initHead()
+
 	dir := "sa"
 	f, err := os.Stat(dir)
 	if err != nil {
@@ -47,7 +59,7 @@ func init() {
 		log.Fatal("Error: cannot found sa file.")
 	}
 	mu = sync.RWMutex{}
-	log.Println("Init sa size: ", l)
+	log.Println("Sync init sa size: ", l)
 }
 
 func next() *string {
@@ -61,7 +73,9 @@ func next() *string {
 	return sa
 }
 
-func Sync(dir, driveId string, t time.Duration) {
+func Sync(dir, driveId string, t time.Duration, parentId string) {
+	initSync()
+
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("Error:", err)
@@ -70,80 +84,107 @@ func Sync(dir, driveId string, t time.Duration) {
 	}()
 
 	log.Println("Sync dir:", dir, "time:", t)
-	readDir(dir, driveId)
+	readDir(dir, driveId, parentId)
 
 	ticker := time.NewTicker(t)
 	for {
 		<-ticker.C
-		readDir(dir, driveId)
+		readDir(dir, driveId, parentId)
 	}
 }
 
-func readDir(dir, driveId string) {
+func readDir(dir, driveId, parentId string) {
 	fs, err := ioutil.ReadDir(dir)
 	if err != nil {
 		log.Println("read dir error:", err)
 		return
 	}
-	log.Println("->read dir")
+	if !strings.HasSuffix(dir, "/") {
+		dir += "/"
+	}
+	log.Println("->scan dir")
 	for _, f := range fs {
 		if f.IsDir() {
 			continue
 		}
 		filename := f.Name()
 		if strings.HasSuffix(filename, PLOT) {
-			newname := strings.Replace(filename, PREFIX, "", 1)
-			newname = strings.Replace(newname, PLOT, GZ, 1)
-			if err = os.Rename(dir+"/"+filename, dir+"/"+newname); err != nil {
+			newname := mixFilename(filename)
+			if err = os.Rename(dir+filename, dir+newname); err != nil {
 				log.Println("Rename error:", err)
 				continue
 			}
 			log.Println("Rename:", filename, "->", newname)
-			go uploadTask(dir+"/"+newname, driveId)
+			go uploadTask(dir, newname, driveId, parentId)
 		} else if strings.HasSuffix(filename, GZ) {
-			go uploadTask(dir+"/"+filename, driveId)
+			go uploadTask(dir, filename, driveId, parentId)
 		}
 	}
 }
 
-func uploadTask(filepath string, driveId string) {
-	if _, ok := uploads[filepath]; ok {
+func uploadTask(dir, filename, driveId string, parentId string) {
+	if _, ok := uploads[filename]; ok {
 		return
 	} else {
-		uploads[filepath] = 1
+		uploads[filename] = 1
 	}
-	log.Println("Upload:", filepath)
+	log.Println("Upload:", filename)
+	filepath := dir + filename
 	media, err := os.Open(filepath)
 	if err != nil {
 		log.Println("Open file err", err)
 		return
 	}
-	stat, err := media.Stat()
+
+	head := make([]byte, kib64)
+	_, err = media.Read(head)
 	if err != nil {
-		log.Println("File stat err", err)
 		return
 	}
+	uploadHead(head, filename, parentId)
+
 	sa := next()
 	log.Println("use sa: ", *sa)
-	service, err := drive.NewService(context.Background(), option.WithCredentialsFile(*sa))
+	svc, err := drive.NewService(context.Background(), option.WithCredentialsFile(*sa))
 	if err != nil {
 		log.Println("Error: new drive service", err)
 		return
 	}
-	meta := &drive.File{
-		Name:    stat.Name(),
-		Parents: []string{driveId},
-	}
 	reader := bufio.NewReaderSize(media, uploadChunkSize)
-	_, err = service.Files.Create(meta).SupportsAllDrives(true).Fields().Media(reader).Do()
+	_, err = svc.Files.Create(&drive.File{
+		Name:    filename,
+		Parents: []string{driveId},
+	}).SupportsAllDrives(true).Fields().Media(reader).Do()
 	if err != nil {
 		log.Println("Upload err", err)
 		return
 	}
 	media.Close()
-	log.Printf("<--Upload [OK]: %s\n", meta.Name)
+	log.Printf("<--Upload body [OK]: %s\n", filename)
 
 	if err = os.Remove(filepath); err != nil {
 		log.Printf("<--Remove [ERROR]: %s\n", media.Name())
 	}
+}
+
+func uploadHead(head []byte, filename string, parentId string) {
+	reader := bytes.NewReader(head)
+	_, err := headSvc.Files.Create(&drive.File{
+		Name:    filename,
+		Parents: []string{parentId},
+	}).Fields().Media(reader).Do()
+	if err != nil {
+		log.Println("Upload head err", err)
+		return
+	}
+	log.Printf("<--Upload head [OK]: %s\n", filename)
+}
+
+func mixFilename(filename string) string {
+	n := strings.LastIndex(filename, "-")
+	if n != -1 {
+		filename = filename[n+1:]
+	}
+	filename = strings.Replace(filename, PLOT, GZ, 1)
+	return filename
 }

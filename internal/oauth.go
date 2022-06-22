@@ -1,4 +1,4 @@
-package oauth
+package internal
 
 import (
 	"context"
@@ -15,11 +15,14 @@ import (
 func InitTokenSource(sa string, subject string) oauth2.TokenSource {
 	key, err := ioutil.ReadFile(sa)
 	if err != nil {
-		log.Println("sa file not found", err)
-		return nil
+		log.Fatalln("SA file not found", err)
+	}
+	scopes := []string{drive.DriveScope}
+	if subject != "" {
+		scopes = append(scopes, admin.AdminDirectoryGroupScope)
 	}
 	creds, err := google.CredentialsFromJSONWithParams(context.Background(), key, google.CredentialsParams{
-		Scopes:  []string{drive.DriveScope, admin.AdminDirectoryGroupScope},
+		Scopes:  scopes,
 		Subject: subject,
 	})
 	if err != nil {
