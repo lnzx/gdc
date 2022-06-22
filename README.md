@@ -8,7 +8,11 @@
 
 ## 配置
 sync
-~/sa/
+sa.json
+
+~./sa/
+
+~./head.json
 
 
 * sync
