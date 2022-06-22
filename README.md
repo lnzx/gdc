@@ -17,7 +17,7 @@ sa=sa
 * sync
 
 ```shell
-    ./gdc -t 1h -d /mnt/tmp 0AK97wFBzByGmUk9PVA
+./gdc -t 1h -d /mnt/tmp 0AK97wFBzByGmUk9PVA
 ```
 
 ```shel
